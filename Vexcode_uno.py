@@ -1,3 +1,13 @@
+# ==============================================================================
+# VEX BRAIN SCREEN & BUTTON HARDWARE SPECIFICATIONS
+# ==============================================================================
+# Screen Text Dimensions (VEX EXP Brain): 5 Rows x ~20 Characters (160x128 px)
+# Available Hardware Input Buttons:
+#   - brain.buttonLeft  : Cycles backward/left through menu options
+#   - brain.buttonRight : Cycles forward/right through menu options
+#   - brain.buttonCheck : Confirms selection
+# ==============================================================================
+
 #region VEXcode Generated Robot Configuration
 from vex import *
 import urandom
@@ -57,6 +67,13 @@ LT(motor1_turn_left)
 LT(motor5_turn_left)
 wait(15, MSEC)
 
+def victory_dance():
+    """Performs a small victory dance using motion broadcasts."""
+    RT.broadcast_and_wait()
+    LT.broadcast_and_wait()
+    RT.broadcast_and_wait()
+    LT.broadcast_and_wait()
+
 # ==============================================================================
 # FULL-SCREEN GRAPHICAL CARD DRAWING FUNCTIONS
 # ==============================================================================
@@ -66,19 +83,15 @@ def draw_uno_card_back():
     brain.screen.set_fill_color(Color.BLACK)
     brain.screen.set_pen_color(Color.WHITE)
     
-    # Outer Card Border
     for i in range(5):
         brain.screen.draw_rectangle(0+i, 0+i, 159-(i*2), 107-(i*2))
     
-    # Red Inner Background
     brain.screen.set_fill_color(Color.RED)
     brain.screen.draw_rectangle(15, 15, 130, 78)
     
-    # Yellow Oval Center
     brain.screen.set_fill_color(Color.YELLOW)
     brain.screen.draw_circle(80, 54, 25)
     
-    # "UNO" Text
     brain.screen.set_pen_color(Color.BLACK)
     brain.screen.set_cursor(3, 8)
     brain.screen.print("UNO")
@@ -179,7 +192,7 @@ def draw_card_full_screen(card_str, color_code):
     elif card == "D2":
         brain.screen.set_fill_color(Color.WHITE)
         for i in range(40):
-            brain.screen.draw_circle(60+i, 42+(i/2), 30)
+            brain.screen.draw_circle(60+i, int(42+(i/2)), 30)
         if color_code == 'R': brain.screen.set_fill_color(Color.RED)
         elif color_code == 'G': brain.screen.set_fill_color(Color.GREEN)
         elif color_code == 'B': brain.screen.set_fill_color(Color.BLUE)
@@ -214,10 +227,10 @@ def draw_card_full_screen(card_str, color_code):
         brain.screen.set_fill_color(Color.TRANSPARENT)
         brain.screen.set_pen_width(3)
         for i in range(15):
-            brain.screen.draw_circle(80, 52, 30-(i/5))
+            brain.screen.draw_circle(80, 52, int(30-(i/5)))
         brain.screen.set_pen_color(Color.BLACK)
         for i in range(65):
-            brain.screen.draw_circle(80, 52, 31+(i/5))
+            brain.screen.draw_circle(80, 52, int(31+(i/5)))
         brain.screen.set_pen_width(1)
     elif card_str == "D4":
         brain.screen.set_fill_color(Color.YELLOW)
@@ -244,7 +257,7 @@ def draw_card_full_screen(card_str, color_code):
         brain.screen.set_fill_color(Color.RED)
         brain.screen.set_pen_color(Color.RED)
         for i in range(40):
-            brain.screen.draw_circle(60+i, 42+(i/2), 30)
+            brain.screen.draw_circle(60+i, int(42+(i/2)), 30)
         brain.screen.set_pen_color(Color.YELLOW)
         for i in range(5):
             brain.screen.draw_line(75, 50+i-5, 85, 50+i-5)
@@ -252,12 +265,12 @@ def draw_card_full_screen(card_str, color_code):
             brain.screen.draw_line(75, 50+i+5, 85, 50+i-5)
 
             brain.screen.draw_line(75, 50+i-15, 85, 50+i-15)
-            brain.screen.draw_line(75+(i/2), 50-15, 75+(i/2), 50-25)
-            brain.screen.draw_line(83+(i/2), 50-15, 83+(i/2), 50-25)
+            brain.screen.draw_line(int(75+(i/2)), 50-15, int(75+(i/2)), 50-25)
+            brain.screen.draw_line(int(83+(i/2)), 50-15, int(83+(i/2)), 50-25)
             brain.screen.draw_line(75, 50+i-25, 85, 50+i-25)
 
             brain.screen.draw_line(75, 50+i+15, 85, 50+i+15)
-            brain.screen.draw_line(83+(i/2), 50+15, 83+(i/2), 50+25)
+            brain.screen.draw_line(int(83+(i/2)), 50+15, int(83+(i/2)), 50+25)
             brain.screen.draw_line(75, 50+i+25, 85, 50+i+25)
             
     brain.screen.set_fill_color(Color.TRANSPARENT)
@@ -308,6 +321,18 @@ def display_uno_screen():
     brain.screen.set_cursor(5, 1)
     brain.screen.print("====================")
 
+def display_winner_screen():
+    """Displays WINNER banner when final card is deposited."""
+    brain.screen.clear_screen()
+    brain.screen.set_fill_color(Color.BLACK)
+    brain.screen.set_pen_color(Color.WHITE)
+    brain.screen.set_cursor(1, 1)
+    brain.screen.print("====================")
+    brain.screen.set_cursor(3, 1)
+    brain.screen.print("   *** WINNER! ***  ")
+    brain.screen.set_cursor(5, 1)
+    brain.screen.print("====================")
+
 def display_all_cards(hand):
     """Displays player's current hand across the 5-line text screen."""
     brain.screen.clear_screen()
@@ -330,9 +355,11 @@ def display_all_cards(hand):
 # ==============================================================================
 # ROBOT NAVIGATION ROUTINES
 # ==============================================================================
-def drive_to_center(show_uno=False):
-    """Drives to center table. Shows 'UNO!' overlay if triggered, else hides hand."""
-    if show_uno:
+def drive_to_center(show_uno=False, show_winner=False):
+    """Drives to center table. Shows 'WINNER!' or 'UNO!' overlay if triggered."""
+    if show_winner:
+        display_winner_screen()
+    elif show_uno:
         display_uno_screen()
     else:
         hide_hand_screen()
@@ -434,9 +461,9 @@ def format_short_card(card):
 def check_playable(card, top_card):
     if card['color'] is None:
         return True
-    if top_card['color'] is not None and card['color'] == top_card['color']:
+    if top_card is not None and top_card['color'] is not None and card['color'] == top_card['color']:
         return True
-    if card['type'] == top_card['type']:
+    if top_card is not None and card['type'] == top_card['type']:
         return True
     return False
 
@@ -453,7 +480,7 @@ def draw_multiple_cards_with_back_graphic(deck, player_hand, count=1):
         if len(deck) > 0:
             player_hand.append(deck.pop(0))
             draw_uno_card_back()
-            wait(1200, MSEC)  # Shows UNO card back graphic while drawing
+            wait(1200, MSEC)
         else:
             brain.screen.clear_screen()
             brain.screen.set_fill_color(Color.BLACK)
@@ -654,7 +681,7 @@ def main():
     custom_shuffle(deck)
     player_hand = deal_starting_hand(deck, 7)
     
-    top_card = None  # Initialized so the variable exists for player_turn_menu
+    top_card = None  # Initialized so variable exists for first call
     
     while len(player_hand) > 0:
         # 1. Display current hand before taking turn
@@ -664,26 +691,32 @@ def main():
         # 2. First select table card, then choose action (ATTACK or DRAW)
         action_type, action_data, top_card = player_turn_menu(player_hand, top_card)
         
-        # 3. Check for UNO trigger (1 card left after playing)
+        # 3. Check triggers
         is_uno = (action_type == "ATTACK" and len(player_hand) == 2)
+        is_winner = (action_type == "ATTACK" and len(player_hand) == 1)
         
-        if is_uno:
-            brain.play_sound(SoundType.TADA)
+        # SAFE SOUND BLOCK: Attempts to play sound, but ignores crashes if unavailable
+        try:
+            if is_winner:
+                brain.play_sound(SoundType.TADA)
+            elif is_uno:
+                brain.play_sound(SoundType.ALARM)
+        except Exception:
+            pass  # Completely ignores the error and keeps the robot running
         
         # 4. Drive to center table
-        drive_to_center(show_uno=is_uno)
+        drive_to_center(show_uno=is_uno, show_winner=is_winner)
         wait(500, MSEC)
         
         # 5. Execute Action at center table
         if action_type == "DRAW":
             draw_count = action_data
-            # Displays the back of an UNO card on screen for each drawn card
             draw_multiple_cards_with_back_graphic(deck, player_hand, count=draw_count)
         elif action_type == "ATTACK":
             played_card = action_data
             player_hand.remove(played_card)
             
-            # Show full-screen graphical render of the played card at the center table
+            # Show full-screen graphical render of the played card at center table
             render_card_graphic(played_card)
             wait(2000, MSEC)
             
@@ -694,13 +727,8 @@ def main():
         display_all_cards(player_hand)
         wait(2500, MSEC)
 
-    # Win Screen
-    brain.screen.clear_screen()
-    brain.screen.set_fill_color(Color.BLACK)
-    brain.screen.set_pen_color(Color.WHITE)
-    brain.screen.set_cursor(2, 1)
-    brain.screen.print("*** YOU WIN! ***")
-    brain.screen.set_cursor(3, 1)
-    brain.screen.print("ALL CARDS PLAYED!")
+    # Win Screen & Victory Dance
+    display_winner_screen()
+    victory_dance()
 
 main()
